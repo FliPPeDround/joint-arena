@@ -118,7 +118,7 @@ joint-arena/
     │   ├── presets.ts          # 预设 CRUD / 选中态 / 内置示例播种（localStorage）
     │   └── ui.ts               # 顶层视图状态与导航动作（startTraining / openEditor / goLobby）
     ├── editor/presetThumb.ts   # 预设缩略图：静止姿态白膜骨架 + 代码配色渲染到 canvas
-    ├── monaco/                 # Monaco 接入：worker 打包入口、ja-dark/ja-light 主题、SDK 类型补全、P1/P2 模型
+    ├── monaco/                 # Monaco 接入：worker 打包入口、ja-dark 主题、SDK 类型补全、P1/P2 模型
     ├── components/
     │   ├── PresetThumb.vue     # 预设卡片缩略图 canvas
     │   ├── HudOverlay.vue      # 血条 / 回合计时 / 状态标签

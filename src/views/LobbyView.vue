@@ -11,6 +11,9 @@ import { createPreset, duplicatePreset, newPresetCode, presets, removePreset, se
 import { profile, renameProfile } from '../stores/profile'
 import { openEditor, startTraining } from '../stores/ui'
 
+/** 大厅外链：源码仓库地址，与 package.json 的 repository 保持一致 */
+const REPO_URL = 'https://github.com/FliPPeDround/joint-arena'
+
 // ---- 帧率读数（真实测量，主菜单左上角） ----
 const fps = ref(0)
 let rafId = 0
@@ -112,10 +115,17 @@ const pendingDeletePreset = computed(() => presets.list.find(p => p.id === pendi
     <!-- 舞台遮罩：暗角 + 可读性渐变（游戏领域样式，定义在 main.css） -->
     <div class="lobby-stage-veil pointer-events-none inset-0 absolute" />
 
-    <!-- 左上：字标 + 真实数据读数 -->
+    <!-- 左上：字标 + GitHub 外链 + 真实数据读数 -->
     <div class="select-none left-6 top-5 absolute z-hud lg:left-10 lg:top-6">
-      <div class="text-lg tracking-[0.35em] font-display op-90">
-        JOINT ARENA
+      <div class="flex gap-1 items-center">
+        <div class="text-lg tracking-[0.35em] font-display op-90">
+          JOINT ARENA
+        </div>
+        <ActionIconButton
+          :href="REPO_URL" target="_blank" rel="noopener noreferrer"
+          icon="i-ph:github-logo" tooltip="源码仓库" label="在 GitHub 打开项目仓库"
+          class="text-base"
+        />
       </div>
       <div class="text-mini color-faint font-mono mt-1">
         原型 0.1 · 帧率 {{ fps || '--' }}

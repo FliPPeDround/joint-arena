@@ -31,12 +31,6 @@ monaco.editor.defineTheme('ja-dark', {
   rules: [],
   colors: { 'editor.background': '#111111' },
 })
-monaco.editor.defineTheme('ja-light', {
-  base: 'vs',
-  inherit: true,
-  rules: [],
-  colors: { 'editor.background': '#ffffff' },
-})
 
 export interface CodeModel {
   model: monaco.editor.ITextModel

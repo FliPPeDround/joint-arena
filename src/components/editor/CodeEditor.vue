@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import type { FighterId } from '../../config'
-import { useDark } from '@vueuse/core'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { codeModels, monaco } from '../../monaco/setup'
 
 const props = defineProps<{ fighter: FighterId }>()
 
 const host = ref<HTMLElement>()
-const isDark = useDark({ initialValue: 'dark' })
 let editor: monaco.editor.IStandaloneCodeEditor | null = null
 
 onMounted(() => {
@@ -22,7 +20,7 @@ onMounted(() => {
     padding: { top: 8 },
     renderLineHighlight: 'all',
     smoothScrolling: true,
-    theme: isDark.value ? 'ja-dark' : 'ja-light',
+    theme: 'ja-dark',
   })
 })
 
@@ -34,10 +32,6 @@ watch(() => props.fighter, (next, prev) => {
   const state = codeModels[next].viewState
   if (state)
     editor.restoreViewState(state)
-})
-
-watch(isDark, (dark) => {
-  monaco.editor.setTheme(dark ? 'ja-dark' : 'ja-light')
 })
 
 onBeforeUnmount(() => {

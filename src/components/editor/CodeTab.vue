@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import type { FighterId } from '../../config'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
-import ActionToggle from '@antfu/design/components/Action/ActionToggle.vue'
 import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
 import FormSelect from '@antfu/design/components/Form/FormSelect.vue'
-import { useDark, useToggle } from '@vueuse/core'
 import { ref } from 'vue'
 import { EXAMPLES } from '../../editor/examples'
 import { codes, gameApi, gameStore, pushConsole } from '../../stores/game'
@@ -40,10 +38,6 @@ function saveToPreset(): void {
   if (saved)
     pushConsole('sys', `P1 代码已保存到预设「${saved.name}」`)
 }
-
-// 默认暗色（与 index.html 的 class="dark" 一致），偏好持久化到 localStorage
-const isDark = useDark({ initialValue: 'dark' })
-const toggleDark = useToggle(isDark)
 </script>
 
 <template>
@@ -75,12 +69,6 @@ const toggleDark = useToggle(isDark)
         <ActionButton @click="gameApi?.reset()">
           ↺ 重置回合
         </ActionButton>
-        <ActionToggle
-          :model-value="isDark"
-          :icon="isDark ? 'i-ph:moon-stars' : 'i-ph:sun'"
-          :label="isDark ? '切换亮色模式' : '切换暗色模式'"
-          @click="toggleDark()"
-        />
       </div>
     </div>
 
