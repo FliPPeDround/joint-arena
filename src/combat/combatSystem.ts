@@ -1,4 +1,5 @@
 import type { FighterId } from '../config'
+import type { DisplayMsg } from '../i18n'
 import type { FighterBody } from '../physics/fighterBody'
 import type { PhysicsWorld } from '../physics/physicsWorld'
 import type { FighterView } from '../render/fighterView'
@@ -6,11 +7,12 @@ import type { GameApp } from '../render/gameApp'
 import type { SdkEvent } from '../sdk/protocol'
 import { CFG } from '../config'
 import { clamp } from '../core/utils'
+import { msg, t } from '../i18n'
 import { PARTS } from '../skeleton/partDefs'
 
 /** 回合横幅的最小接口（UI 层负责呈现，原 DOM Hud 的子集） */
 export interface CombatHud {
-  banner: (main: string, sub?: string) => void
+  banner: (main: DisplayMsg, sub?: DisplayMsg | null) => void
   hideBanner: () => void
 }
 
@@ -127,8 +129,8 @@ export class CombatSystem {
         }
       }
       this.hud.banner(
-        this.winner === 'draw' ? '平 局' : `${this.winner} 获胜！`,
-        '按 ESC 打开菜单重新开始',
+        this.winner === 'draw' ? msg('banner.draw') : msg('banner.win', { winner: this.winner }),
+        msg('banner.hint'),
       )
       this.emit('P1', { type: 'roundEnd', winner: this.winner })
       this.emit('P2', { type: 'roundEnd', winner: this.winner })
@@ -231,7 +233,7 @@ export class CombatSystem {
       const fxColor = blocked ? 0x8FD0FF : crit ? 0xFF5D4D : 0xFFD34D
       const [cx, cy] = victimF.partPivot(victimPart)
       this.app.spawnHitSpark(cx, cy, fxColor)
-      this.app.spawnDamageText(cx, cy, cleanHit ? dmg : '挡', fxColor, crit)
+      this.app.spawnDamageText(cx, cy, cleanHit ? dmg : t('hud.block'), fxColor, crit)
       const before = this.views[victimF.id].currentTint(victimPart)
       this.views[victimF.id].setPartColor(victimPart, blocked ? 0x8FD0FF : 0xFF6B6B)
       this.flashes.push({ fighter: victimF.id, part: victimPart, until: this.now + 0.13, colorBefore: before })

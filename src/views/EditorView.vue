@@ -9,6 +9,7 @@ import DocsTab from '../components/editor/DocsTab.vue'
 import PanelToggle from '../components/editor/PanelToggle.vue'
 import SettingsTab from '../components/editor/SettingsTab.vue'
 import TextureTab from '../components/editor/TextureTab.vue'
+import { msg, t } from '../i18n'
 import { codes, gameApi, gameStore, pushConsole } from '../stores/game'
 import { getPreset, saveCodeToPreset } from '../stores/presets'
 import { goLobby, uiStore } from '../stores/ui'
@@ -17,12 +18,12 @@ const route = useRoute()
 const router = useRouter()
 const tab = ref('code')
 
-const tabs = [
-  { value: 'code', label: '代码' },
-  { value: 'docs', label: 'SDK 文档' },
-  { value: 'tex', label: '纹理' },
-  { value: 'settings', label: '设置' },
-]
+const tabs = computed(() => [
+  { value: 'code', label: t('editor.tabCode') },
+  { value: 'docs', label: t('editor.tabDocs') },
+  { value: 'tex', label: t('editor.tabTex') },
+  { value: 'settings', label: t('editor.tabSettings') },
+])
 
 const preset = computed(() => getPreset(String(route.params.presetId ?? '')))
 const nameDraft = ref(preset.value?.name ?? '')
@@ -42,7 +43,7 @@ function savePreset(): void {
   if (saved.id !== preset.value.id)
     router.replace({ name: 'editor', params: { presetId: saved.id } })
   nameDraft.value = saved.name
-  pushConsole('sys', `已保存预设「${saved.name}」`)
+  pushConsole('sys', msg('console.savedPreset', { name: saved.name }))
 }
 </script>
 
@@ -57,11 +58,11 @@ function savePreset(): void {
     >
       <header class="px-2 py-1.5 border-b border-base bg-base flex flex-wrap gap-2 pointer-events-auto items-center">
         <ActionButton size="sm" icon="i-ph:arrow-left" @click="goLobby()">
-          大厅
+          {{ t('nav.lobby') }}
         </ActionButton>
-        <span class="text-sm color-muted shrink-0">编辑预设</span>
+        <span class="text-sm color-muted shrink-0">{{ t('editor.editPreset') }}</span>
         <FormTextInput
-          v-model="nameDraft" size="sm" class="w-40" placeholder="预设名称"
+          v-model="nameDraft" size="sm" class="w-40" :placeholder="t('editor.presetName')"
           @keydown.enter="($event.target as HTMLInputElement).blur()"
         />
         <div class="flex-1" />
@@ -69,7 +70,7 @@ function savePreset(): void {
           variant="primary" size="sm" icon="i-ph:floppy-disk"
           :disabled="!preset" @click="savePreset()"
         >
-          保存预设
+          {{ t('editor.savePreset') }}
         </ActionButton>
       </header>
 
@@ -77,17 +78,17 @@ function savePreset(): void {
       <div class="flex-1 min-h-0 relative">
         <div class="flex gap-2 pointer-events-none items-center left-2 top-2 absolute z-hud">
           <span class="text-mini color-muted px-2 py-0.5 border border-base rounded-full bg-black/60">
-            预设预览 · P1
+            {{ t('editor.previewBadge') }}
           </span>
           <span class="text-mini" :class="gameStore.status.P1.error ? 'color-scale-critical' : 'color-muted'">
-            {{ gameStore.status.P1.text }}
+            {{ t(gameStore.status.P1.key) }}
           </span>
         </div>
         <ActionButton
           class="pointer-events-auto right-2 top-2 absolute z-hud" size="sm" icon="i-ph:arrow-counter-clockwise"
           @click="gameApi?.run()"
         >
-          重启预览
+          {{ t('editor.restartPreview') }}
         </ActionButton>
       </div>
     </div>

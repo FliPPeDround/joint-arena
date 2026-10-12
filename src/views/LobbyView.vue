@@ -6,7 +6,9 @@ import FormTextInput from '@antfu/design/components/Form/FormTextInput.vue'
 import OverlayConfirm from '@antfu/design/components/Overlay/OverlayConfirm.vue'
 import OverlayModal from '@antfu/design/components/Overlay/OverlayModal.vue'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import LanguageSwitch from '../components/LanguageSwitch.vue'
 import PresetThumb from '../components/PresetThumb.vue'
+import { t } from '../i18n'
 import { createPreset, duplicatePreset, newPresetCode, presets, removePreset, selectPreset } from '../stores/presets'
 import { profile, renameProfile } from '../stores/profile'
 import { openEditor, startTraining } from '../stores/ui'
@@ -75,7 +77,7 @@ function editPreset(p: Preset): void {
 }
 
 function createAndEdit(): void {
-  const p = createPreset('未命名预设', newPresetCode())
+  const p = createPreset(t('presets.untitled'), newPresetCode())
   openEditor(p.id)
 }
 
@@ -115,20 +117,21 @@ const pendingDeletePreset = computed(() => presets.list.find(p => p.id === pendi
     <!-- 舞台遮罩：暗角 + 可读性渐变（游戏领域样式，定义在 main.css） -->
     <div class="lobby-stage-veil pointer-events-none inset-0 absolute" />
 
-    <!-- 左上：字标 + GitHub 外链 + 真实数据读数 -->
+    <!-- 左上：字标 + 语言 / GitHub 外链 + 真实数据读数 -->
     <div class="select-none left-6 top-5 absolute z-hud lg:left-10 lg:top-6">
-      <div class="flex gap-1 items-center">
+      <div class="flex gap-2 items-center">
         <div class="text-lg tracking-[0.35em] font-display op-90">
           JOINT ARENA
         </div>
+        <LanguageSwitch class="shrink-0" />
         <ActionIconButton
           :href="REPO_URL" target="_blank" rel="noopener noreferrer"
-          icon="i-ph:github-logo" tooltip="源码仓库" label="在 GitHub 打开项目仓库"
-          class="text-base"
+          icon="i-ph:github-logo" :tooltip="t('lobby.repoTooltip')" :label="t('lobby.repoLabel')"
+          class="text-base shrink-0"
         />
       </div>
       <div class="text-mini color-faint font-mono mt-1">
-        原型 0.1 · 帧率 {{ fps || '--' }}
+        {{ t('lobby.readout', { fps: fps || '--' }) }}
       </div>
     </div>
 
@@ -140,48 +143,48 @@ const pendingDeletePreset = computed(() => presets.list.find(p => p.id === pendi
           class="text-mini color-faint ml-auto outline-none block cursor-pointer transition focus-visible:color-base hover:color-muted"
           @click="startRename()"
         >
-          点击改名
+          {{ t('lobby.clickRename') }}
         </button>
         <template v-if="!renaming">
           <div class="text-2xl leading-tight font-display mt-0.5">
             {{ profile.name }}
           </div>
           <div class="text-mini color-muted font-mono mt-1">
-            {{ profile.battles }} 场 · 胜率 {{ winRate }}%
+            {{ t('lobby.record', { battles: profile.battles, winRate }) }}
           </div>
         </template>
         <FormTextInput
-          v-else v-model="nameDraft" size="sm" class="mt-1 w-36!" autofocus
+          v-else v-model="nameDraft" size="sm" class="mt-1 w-36" autofocus
           @keydown.enter="commitRename()" @blur="commitRename()"
         />
       </div>
-      <div class="lobby-diamond mt-2" :title="`胜场 ${profile.wins}`">
+      <div class="lobby-diamond mt-2" :title="t('lobby.winsTip', { wins: profile.wins })">
         <span class="text-base font-bold font-mono tabular-nums">{{ profile.wins }}</span>
       </div>
     </div>
 
     <!-- 左侧主菜单：宋体竖排，层级递进缩进 -->
-    <nav class="flex flex-col gap-7 pointer-events-none left-6 top-[17vh] absolute z-hud lg:left-14" aria-label="主菜单">
+    <nav class="flex flex-col gap-7 pointer-events-none left-6 top-[17vh] absolute z-hud lg:left-14" :aria-label="t('lobby.mainMenu')">
       <div>
         <button
           class="group text-left outline-none flex gap-4 cursor-pointer pointer-events-auto items-center focus-visible:ring-2 focus-visible:ring-primary-500/40"
           @click="modeModalOpen = true"
         >
           <span class="bg-primary-400 shrink-0 h-2 w-2 rotate-45 scale-0 transition-transform duration-200 group-focus-visible:scale-100 group-hover:scale-100" aria-hidden="true" />
-          <span class="text-5xl tracking-[0.28em] font-bold font-display op-95 transition-opacity group-hover:op-100">新的对决</span>
+          <span class="i18n-display text-5xl tracking-[0.28em] font-bold font-display op-95 transition-opacity group-hover:op-100">{{ t('lobby.newBattle') }}</span>
         </button>
         <p class="text-mini color-faint font-mono mt-1 pl-8 select-none">
-          训练模式 · 与内建格斗 AI 对练
+          {{ t('lobby.newBattleHint') }}
         </p>
       </div>
 
       <button
-        class="group pl-5 text-left outline-none flex gap-4 cursor-pointer pointer-events-auto items-center disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-primary-500/40 disabled:op-30!"
+        class="group text-left outline-none flex gap-4 cursor-pointer pointer-events-auto items-center disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-primary-500/40 disabled:op-30!"
         :disabled="!selectedPreset"
         @click="selectedPreset && editPreset(selectedPreset)"
       >
         <span class="bg-primary-400 shrink-0 h-2 w-2 rotate-45 scale-0 transition-transform duration-200 group-focus-visible:scale-100 group-hover:scale-100" aria-hidden="true" />
-        <span class="text-3xl tracking-[0.3em] font-bold font-display op-45 transition-opacity group-focus-visible:op-100 group-hover:op-100">编辑机体</span>
+        <span class="i18n-display text-3xl tracking-[0.3em] font-bold font-display op-45 transition-opacity group-focus-visible:op-100 group-hover:op-100">{{ t('lobby.editFighter') }}</span>
       </button>
     </nav>
 
@@ -189,10 +192,10 @@ const pendingDeletePreset = computed(() => presets.list.find(p => p.id === pendi
     <div class="inset-x-0 bottom-0 absolute z-hud">
       <div class="px-6 pb-4 lg:px-10">
         <div class="mb-2 flex gap-4 items-baseline justify-between">
-          <h2 class="text-base tracking-[0.4em] font-display op-80">
-            预设库
+          <h2 class="i18n-display text-base tracking-[0.4em] font-display op-80">
+            {{ t('lobby.presetLibrary') }}
           </h2>
-          <span class="text-mini color-faint select-none">点选机体 · 开战时使用它的代码</span>
+          <span class="text-mini color-faint select-none">{{ t('lobby.presetLibraryHint') }}</span>
         </div>
         <div class="no-scrollbar pb-1 flex gap-2.5 items-start overflow-x-auto">
           <div v-for="p in presets.list" :key="p.id" class="group shrink-0 w-24">
@@ -204,7 +207,7 @@ const pendingDeletePreset = computed(() => presets.list.find(p => p.id === pendi
                   : 'border-base op-75 hover:op-100 focus-within:op-100'"
               >
                 <PresetThumb :code="p.code" />
-                <DisplayBadge v-if="p.builtin" text="内置" :color="false" class="origin-top-left scale-90 left-1 top-1 absolute" />
+                <DisplayBadge v-if="p.builtin" :text="t('lobby.builtinBadge')" :color="false" class="preset-builtin-badge origin-top-left scale-90 left-1 top-1 absolute" />
               </div>
               <div
                 class="text-compact mt-1.5 truncate transition-colors"
@@ -214,10 +217,10 @@ const pendingDeletePreset = computed(() => presets.list.find(p => p.id === pendi
               </div>
             </button>
             <div class="mt-0.5 op-0 flex gap-0.5 h-6 transition-opacity justify-end group-focus-within:op-100 group-hover:op-100">
-              <ActionIconButton compact icon="i-ph:pencil-simple-line" label="编辑" @click="editPreset(p)" />
-              <ActionIconButton compact icon="i-ph:copy" label="复制副本" @click="duplicatePreset(p.id)" />
+              <ActionIconButton compact icon="i-ph:pencil-simple-line" :label="t('lobby.edit')" @click="editPreset(p)" />
+              <ActionIconButton compact icon="i-ph:copy" :label="t('lobby.duplicate')" @click="duplicatePreset(p.id)" />
               <ActionIconButton
-                v-if="!p.builtin" compact icon="i-ph:trash" label="删除"
+                v-if="!p.builtin" compact icon="i-ph:trash" :label="t('lobby.delete')"
                 @click="askDelete(p.id)"
               />
             </div>
@@ -229,14 +232,14 @@ const pendingDeletePreset = computed(() => presets.list.find(p => p.id === pendi
             @click="createAndEdit()"
           >
             <span class="i-ph:plus text-xl" aria-hidden="true" />
-            <span class="text-compact">新建</span>
+            <span class="text-compact">{{ t('lobby.create') }}</span>
           </button>
         </div>
       </div>
     </div>
 
     <!-- 模式选择 -->
-    <OverlayModal v-model:open="modeModalOpen" title="新的对决" description="选择对战模式">
+    <OverlayModal v-model:open="modeModalOpen" :title="t('lobby.modeTitle')" :description="t('lobby.modeDesc')">
       <div class="gap-3 grid sm:grid-cols-2">
         <button
           class="p-4 text-left outline-none border border-base rounded-lg bg-raised cursor-pointer transition hover:bg-hover focus-visible:ring-2 focus-visible:ring-primary-500/40 active:scale-98"
@@ -245,21 +248,21 @@ const pendingDeletePreset = computed(() => presets.list.find(p => p.id === pendi
         >
           <span class="i-ph:robot text-3xl mb-2 block" aria-hidden="true" />
           <div class="font-bold">
-            训练模式
+            {{ t('lobby.training') }}
           </div>
           <div class="text-mini color-muted mt-1">
-            与内建格斗 AI 对练，使用选中的预设
+            {{ t('lobby.trainingDesc') }}
           </div>
         </button>
         <div class="p-4 border border-base rounded-lg bg-raised op-50 relative">
           <span class="i-ph:users-three text-3xl mb-2 block" aria-hidden="true" />
           <div class="font-bold">
-            联机模式
+            {{ t('lobby.online') }}
           </div>
           <div class="text-mini color-muted mt-1">
-            与其他玩家实时对战
+            {{ t('lobby.onlineDesc') }}
           </div>
-          <DisplayBadge text="即将推出" color="amber" class="right-3 top-3 absolute" />
+          <DisplayBadge :text="t('lobby.comingSoon')" color="amber" class="right-3 top-3 absolute" />
         </div>
       </div>
     </OverlayModal>
@@ -267,11 +270,11 @@ const pendingDeletePreset = computed(() => presets.list.find(p => p.id === pendi
     <!-- 删除预设确认 -->
     <OverlayConfirm
       v-model:open="deleteConfirmOpen"
-      title="删除这个预设？"
-      :description="pendingDeletePreset ? `「${pendingDeletePreset.name}」的代码将被删除，此操作无法撤销。` : ''"
+      :title="t('lobby.deleteTitle')"
+      :description="pendingDeletePreset ? t('lobby.deleteDesc', { name: pendingDeletePreset.name }) : ''"
       variant="danger"
-      confirm-label="删除"
-      cancel-label="取消"
+      :confirm-label="t('lobby.delete')"
+      :cancel-label="t('common.cancel')"
       @confirm="confirmDelete()"
     />
   </div>

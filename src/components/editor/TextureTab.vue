@@ -2,6 +2,7 @@
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { downloadTemplatePng, drawTexPreview } from '../../editor/texturePreview'
+import { locale, t } from '../../i18n'
 import { ALL_PARTS, PARTS } from '../../skeleton/partDefs'
 import { gameApi } from '../../stores/game'
 
@@ -26,6 +27,8 @@ function redraw(): void {
 onMounted(redraw)
 watch(texPart, () => nextTick(redraw))
 watch(gameApi, () => nextTick(redraw))
+// 画布上的锚点提示与规格行是文字，换语言后必须重绘
+watch(locale, () => nextTick(redraw))
 
 function onColorInput(part: string, ev: Event): void {
   const color = (ev.target as HTMLInputElement).value
@@ -36,29 +39,31 @@ function onColorInput(part: string, ev: Event): void {
 
 <template>
   <div class="docs flex-1 of-y-auto">
-    <h3>纹理自定义</h3>
-    <p>每个部件 = 一个插槽。三种自定义方式：<b>染色</b>（下方色板，实时生效）、<b>图片</b>、<b>Canvas 绘制</b>（均通过 SDK 代码调用，见 SDK 文档）。</p>
-    <p>自定义贴图建议按模板尺寸绘制（= 部件尺寸 × 4），锚点在<b>顶边中点</b>，渲染时贴图竖直向下、随部件旋转。</p>
+    <h3>{{ t('tex.title') }}</h3>
+    <!-- eslint-disable-next-line vue/no-v-html — 文案是应用内静态字符串（含 <b> 强调），非用户输入 -->
+    <p v-html="t('tex.intro')" />
+    <!-- eslint-disable-next-line vue/no-v-html -->
+    <p v-html="t('tex.spec')" />
 
     <canvas ref="previewCanvas" width="240" height="240" class="my-2 border border-base rounded-lg" />
     <div class="text-mini color-muted mb-2">
-      {{ previewInfo || '正在加载图集…' }}
+      {{ previewInfo || t('tex.loadingAtlas') }}
     </div>
     <ActionButton size="sm" class="mb-2.5" @click="downloadTemplatePng(texPart)">
-      ⬇ 下载当前部件模板 PNG
+      {{ t('tex.downloadPng') }}
     </ActionButton>
 
     <table class="text-mini w-full border-collapse">
       <thead>
         <tr>
           <th class="font-bold px-2 py-0.5 text-left border border-base bg-secondary">
-            部件
+            {{ t('tex.colPart') }}
           </th>
           <th class="font-bold px-2 py-0.5 text-left border border-base bg-secondary">
-            尺寸(宽×高)
+            {{ t('tex.colSize') }}
           </th>
           <th class="font-bold px-2 py-0.5 text-left border border-base bg-secondary">
-            染色
+            {{ t('tex.colTint') }}
           </th>
           <th class="font-bold px-2 py-0.5 text-left border border-base bg-secondary" />
         </tr>
@@ -88,7 +93,7 @@ function onColorInput(part: string, ev: Event): void {
           </td>
           <td class="px-2 py-0.5 border border-base">
             <ActionButton size="sm" @click.stop="gameApi?.resetPart(p)">
-              重置
+              {{ t('tex.reset') }}
             </ActionButton>
           </td>
         </tr>

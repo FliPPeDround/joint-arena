@@ -1,5 +1,6 @@
 import { reactive, watch } from 'vue'
-import { EXAMPLES, STARTER_CODE } from '../editor/examples'
+import { EXAMPLE_IDS, exampleCode, exampleName, starterCode } from '../editor/examples'
+import { locale, t } from '../i18n'
 
 /** 预设：一套保存下来的角色代码（大厅选卡开局，编辑页维护） */
 export interface Preset {
@@ -16,12 +17,12 @@ const LS_SELECTED = 'joint-arena.preset.selected'
 
 function seedFromExamples(): Preset[] {
   const now = Date.now()
-  return EXAMPLES.map((ex, i) => ({
-    id: `builtin.${ex.id}`,
-    name: ex.name.replace(/^\d+\s*/, ''),
-    code: ex.code,
+  return EXAMPLE_IDS.map((id, i) => ({
+    id: `builtin.${id}`,
+    name: exampleName(id, false),
+    code: exampleCode(id),
     builtin: true,
-    updatedAt: now - (EXAMPLES.length - i) * 60_000,
+    updatedAt: now - (EXAMPLE_IDS.length - i) * 60_000,
   }))
 }
 
@@ -80,6 +81,11 @@ watch(presets, (v) => {
   localStorage.setItem(LS_SELECTED, v.selectedId)
 })
 
+/** 内置预设的名字与代码是内容（按语言分两份），换语言时重新同步；用户预设原样保留、顺序不动 */
+watch(locale, () => {
+  presets.list = syncBuiltins(presets.list)
+})
+
 export function getPreset(id: string): Preset | undefined {
   return presets.list.find(p => p.id === id)
 }
@@ -97,7 +103,7 @@ function nextId(): string {
 }
 
 export function createPreset(name: string, code: string): Preset {
-  const p: Preset = { id: nextId(), name: name.trim() || '未命名预设', code, builtin: false, updatedAt: Date.now() }
+  const p: Preset = { id: nextId(), name: name.trim() || t('presets.untitled'), code, builtin: false, updatedAt: Date.now() }
   presets.list.push(p)
   presets.selectedId = p.id
   return p
@@ -108,7 +114,7 @@ export function duplicatePreset(id: string): Preset | undefined {
   const src = getPreset(id)
   if (!src)
     return undefined
-  return createPreset(`${src.name} 副本`, src.code)
+  return createPreset(t('presets.copyOf', { name: src.name }), src.code)
 }
 
 export function updatePreset(id: string, patch: Partial<Pick<Preset, 'name' | 'code'>>): void {
@@ -136,7 +142,7 @@ export function removePreset(id: string): void {
 
 /** 新建预设的初始代码：一段能站稳的最小骨架，便于直接进预览调参 */
 export function newPresetCode(): string {
-  return STARTER_CODE
+  return starterCode()
 }
 
 /** 把代码（和可选的新名字）保存到预设；目标是内置预设时自动复制一份写入副本，返回实际保存到的预设 */
@@ -145,7 +151,7 @@ export function saveCodeToPreset(id: string, code: string, name?: string): Prese
   if (!p)
     return undefined
   if (p.builtin)
-    return createPreset(name?.trim() || `${p.name} 副本`, code)
+    return createPreset(name?.trim() || t('presets.copyOf', { name: p.name }), code)
   updatePreset(id, { code, name })
   return p
 }

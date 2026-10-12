@@ -4,6 +4,8 @@
 [![Deploy](https://github.com/FliPPeDround/joint-arena/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/FliPPeDround/joint-arena/actions/workflows/deploy-pages.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+**中文** · [English](README.en.md)
+
 Joint Arena 是一个「可编程关节格斗」Web 游戏原型：角色是白膜骨架，玩家不按预设招式按键，而是**写 JavaScript 代码从关节级别驱动自己的角色**——14 个关节就是 14 台可编程伺服马达，把它们协调起来，角色才能站稳、走动、出拳、踢腿、格挡。流程与大多数游戏一致：进入**大厅**（用户档案 + 预设网格）→ 选择**训练模式**（打机器人）或联机模式（暂未开放）→ 两具物理骨架在场地里互搏，99 秒内打空对方 100 点血即获胜；也可以进**编辑页**，左侧实时预览角色、右侧写代码，保存为预设。
 
 > **在线试玩**：<https://flippedround.github.io/joint-arena/>（推送到 `main` 后由 GitHub Pages 自动部署）
@@ -30,6 +32,9 @@ Joint Arena 是一个「可编程关节格斗」Web 游戏原型：角色是白�
 - **Monaco 代码编辑器**：P1/P2 双模型、SDK 全局类型智能提示（`sdk.` 补全）、语法校验、亮/暗主题随系统切换。
 - **外观自定义**：染色 / 图片贴图 / Canvas 绘制三种方式，应用内提供模板规格与模板 PNG 下载。
 - **7 个内置示例**：从「站立 · 平衡」到「完整格斗 AI」，覆盖状态机、连段、防御与走位。
+- **中英双语**：界面文案、状态提示、控制台、SDK 文档与示例代码都有 zh-CN / en-US 两份；语言选择存在 localStorage，
+  切换即时生效（已挂出的横幅、HUD 状态、控制台里的引擎提示跟着变）。示例代码两种语言各一份，逻辑逐行一致——
+  差异只在注释与 `sdk.log()` 文案，两边跑出来的是同一套 AI 行为。
 
 ## 技术栈
 
@@ -37,6 +42,7 @@ Joint Arena 是一个「可编程关节格斗」Web 游戏原型：角色是白�
 | --- | --- |
 | 构建与语言 | Vite 7 + TypeScript 5.9 |
 | UI 框架 | Vue 3.5（`<script setup>` + 响应式 store） |
+| 国际化 | vue-i18n 11（`legacy: false`；消息目录以 zh-CN 为源，en-US 由类型约束强制对齐键） |
 | 设计系统 | `@antfu/design`（UnoCSS `presetAnthonyDesign` token + 组件） |
 | 代码编辑器 | Monaco Editor 0.57（language worker 经 Vite 打包，含 SDK 类型补全） |
 | 渲染 | PixiJS 7.4 |
@@ -92,7 +98,7 @@ VITE_BASE=/joint-arena/ pnpm build
 6. **▶ 运行 / ■ 停止 / ↺ 重置回合**（编辑页）：启动（或重启）角色逻辑并重置回合；停止终止逻辑；重置复位骨架、血量与计时（也可用来从错误暂停中恢复）。对战菜单里的「重新开始」= 重载双方代码并重置回合。
 7. **内置预设**：首次进入自动播种 7 个示例（站立 / 走路 / 出拳 / 踢腿 / 格挡 / 换肤 / 完整格斗 AI），覆盖状态机、连段、防御与走位，可在网格里复制后修改。
 8. **控制台**：`sdk.log()` 的输出、运行时错误、命中提示都打印在这里。
-9. **设置**：编辑页「设置」页签与对战菜单「对战设置」里，都可以开关调试视图（碰撞体 / 关节与角度 / 骨骼 / 射线）并查看已绑定按键。
+9. **设置**：编辑页「设置」页签与对战菜单「对战设置」里，都可以开关调试视图（碰撞体 / 关节与角度 / 骨骼 / 射线）、查看已绑定按键、切换界面语言（中文 / English）；大厅左上角字标旁也有同一个语言开关。
 
 ## 目录结构
 
@@ -107,6 +113,7 @@ joint-arena/
 └── src/
     ├── main.ts                 # Vue 应用入口：挂载 App，引 UnoCSS/reset/设计系统样式
     ├── App.vue                 # 顶层视图外壳：大厅 / 编辑页 / 对战页切换（out-in 过渡）
+    ├── i18n/                   # vue-i18n 装配：index.ts（locale 持久化 + t / 消息键 / DisplayMsg）、messages/zh-CN.ts（事实源）、messages/en-US.ts
     ├── views/
     │   ├── LobbyView.vue       # 大厅：用户档案 + 预设网格 + 开始游戏（模式选择弹层）
     │   ├── EditorView.vue      # 编辑页：单人预览引擎（solo）+ 代码/文档/纹理/设置面板
@@ -121,18 +128,20 @@ joint-arena/
     ├── monaco/                 # Monaco 接入：worker 打包入口、ja-dark 主题、SDK 类型补全、P1/P2 模型
     ├── components/
     │   ├── PresetThumb.vue     # 预设卡片缩略图 canvas
+    │   ├── LanguageSwitch.vue  # 语言切换（中文 / English，复用 @antfu/design ActionToggleGroup）
     │   ├── HudOverlay.vue      # 血条 / 回合计时 / 状态标签
     │   ├── RoundBanner.vue     # KO / 胜负横幅
     │   ├── BattleMenu.vue      # 对战菜单弹层（继续 / 重开 / 设置 / 返回大厅，ESC 呼出）
     │   └── editor/             # EditorPanel（标签页）、CodeTab、CodeEditor（Monaco 封装）、
     │                           # ConsolePanel、DocsTab、TextureTab、SettingsTab
-    ├── editor/                 # 数据与纯函数：examples.ts（7 个示例 + BOT_CODE）、sdkDocs.ts、sdkDts.ts、texturePreview.ts
+    ├── editor/                 # 数据与纯函数：examples.ts（示例选择 API + botCode()/starterCode()，正文在 examples.{zh-CN,en-US}.ts）、
+    │                           # sdkDocs.ts + sdkDocs.{zh-CN,en-US}.ts、sdkDts.ts、texturePreview.ts
     ├── combat/combatSystem.ts  # 战斗规则：伤害/格挡/硬直/击退/倒地/KO/计时胜负
     ├── core/utils.ts           # 角度换算（世界角↔DragonBones 角）、几何工具
     ├── input/inputSystem.ts    # 键鼠输入采集（换算到世界坐标）
     ├── physics/                # physicsWorld.ts（Rapier 世界）+ fighterBody.ts（15 刚体/14 关节/马达/平衡辅助）
     ├── render/                 # gameApp.ts（场景/相机）、fighterView.ts（物理→骨架姿态同步、换肤）、debugView.ts
-    ├── sdk/                    # Worker 沙箱：protocol.ts（协议）、sandboxHost.ts（宿主）、worker.ts、workerSdk.ts（SDK 实现）
+    ├── sdk/                    # Worker 沙箱：protocol.ts（协议）、sandboxHost.ts（宿主）、worker.ts、workerSdk.ts（SDK 实现）、sdkError.ts（错误码）
     ├── skeleton/               # partDefs.ts（部件/关节/静止姿态权威定义）、whiteboxAtlas.ts（白膜图集）、skeletonData.ts（DragonBones JSON 生成）
     ├── styles/                 # 全局样式（领域色 / 文档排版 / 横幅与视图过渡）
     ├── types/                  # DragonBones API 类型声明
@@ -146,8 +155,9 @@ joint-arena/
 - **视图流程**：`stores/ui.ts` 持有顶层视图（`lobby / editor / battle`），`App.vue` 按 `mode="out-in"` 过渡切换 —— 旧视图先卸载（引擎 `dispose()` 释放 Worker / 渲染循环 / 监听，DOM 契约 id 让位），新视图再挂载。
 - **引擎 → UI**：`src/engine/game.ts` 每帧把 HP / 回合时间 / 状态写入 `stores/game.ts` 的响应式 store；沙箱日志与状态同步写入。Vue 组件只读 store 渲染（同值赋值不触发副作用，每帧写很廉价）。分出胜负时引擎写入 `matchWinner` 并累计到 `stores/profile.ts` 的用户档案。
 - **UI → 引擎**：引擎装配后把操作接口（run / stop / reset / dispose / 调试开关 / 部件染色预览 / 图集查询）写入 `gameApi`，组件通过它驱动引擎。`createGame(canvas, { solo })` 的 `solo` 模式只渲染 P1、停用战斗规则，供编辑页做角色预览。
-- **预设**：`stores/presets.ts` 管理预设（首次进入播种 7 个内置示例）；大厅选中的预设决定训练模式的 P1 代码（P2 固定为内建格斗 AI `BOT_CODE`）；Monaco 模型与 `codes` store 双向同步。
+- **预设**：`stores/presets.ts` 管理预设（首次进入播种 7 个内置示例）；大厅选中的预设决定训练模式的 P1 代码（P2 固定为内建格斗 AI `botCode()`）；Monaco 模型与 `codes` store 双向同步。内置预设的名字与代码属于内容，换语言时自动重新同步，用户自建预设原样保留。
 - **代码编辑**：P1/P2 各一个 Monaco 模型，内容变更写入 `codes` store，store watcher 持久化到 localStorage；运行时引擎从 `codes` 取代码喂给沙箱。
+- **国际化**：`src/i18n` 持有 vue-i18n 实例（`legacy: false`）与 `joint-arena.locale` 持久化，切语言时同步 `<html lang>` 与 `document.title`。消息目录以 `messages/zh-CN.ts` 为事实源，`en-US` 由类型约束强制对齐键。引擎写入 store 的状态位、控制台行、胜负横幅存的是**消息键 + 参数**而非成品字符串，模板渲染时才取文案，所以切语言即时重译；玩家 `sdk.log()` 的自由文本按原文显示。SDK 与渲染层的报错只带**错误码 + 参数**（`SdkError` 经 Worker 协议传回宿主），由目录出文案 —— Worker 侧不需要 i18n 实例。拉丁语的字距修正在 `styles/main.css`（`html[lang^="en"] .i18n-display`）。
 - 保留的 DOM 契约：`#game-wrap`（Pixi 自适应尺寸，三个视图都有）与 `#editor-panel`（编辑页右侧面板，InputSystem 判断按键来自编辑器还是游戏）两个 id 不要改名（一次只存在一个实例）。
 
 ## 里程碑 M0–M6 对照
@@ -202,6 +212,8 @@ joint-arena/
 另：主循环若抛异常，完整堆栈会存到 `window.__loopErr`。
 
 ## 更多文档
+
+> 以下 `docs/` 文档与 [CONTRIBUTING.md](CONTRIBUTING.md) 目前只有中文；游戏内的「SDK 文档」标签页有中英两份。
 
 - [docs/QUICKSTART.md](docs/QUICKSTART.md) — 十分钟上手：写出一个会追着对手出拳的角色
 - [docs/SDK.md](docs/SDK.md) — 完整 SDK API 参考（与游戏内「SDK 文档」标签页一致）

@@ -2,8 +2,9 @@
 import type { CreateGameOptions } from '../engine/game'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { BOT_CODE } from '../editor/examples'
+import { botCode } from '../editor/examples'
 import { createGame } from '../engine/game'
+import { t } from '../i18n'
 import { codes, gameApi, gameStore } from '../stores/game'
 import { getPreset } from '../stores/presets'
 import { uiStore } from '../stores/ui'
@@ -57,7 +58,7 @@ function directScene(): void {
     const p = getPreset(String(route.params.presetId ?? ''))
     if (p) {
       codes.P1 = p.code
-      codes.P2 = BOT_CODE
+      codes.P2 = botCode()
     }
   }
   const desired = { mode: sceneMode(name), run: sceneRun(name) }
@@ -120,7 +121,7 @@ const stageClass = computed(() => route.name === 'editor' && uiStore.panelOpen ?
     <div v-if="gameStore.bootError" class="p-8 flex items-center inset-0 justify-center absolute z-banner" role="alert">
       <div class="max-w-160 w-full">
         <div class="text-2xl color-scale-critical font-bold font-display">
-          演武场启动失败
+          {{ t('stage.bootFailed') }}
         </div>
         <pre class="text-mini color-muted font-mono mt-3 p-4 border border-base rounded-md bg-base max-h-60 whitespace-pre-wrap of-auto">{{ gameStore.bootError }}</pre>
       </div>

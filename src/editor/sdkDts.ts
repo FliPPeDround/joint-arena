@@ -1,10 +1,22 @@
-/** Monaco 里 `sdk` 全局的类型声明（与 workerSdk.ts 的运行时 API 保持一致） */
+import type { AppLocale } from '../i18n/messages'
+import { locale } from '../i18n'
 
-export const SDK_DTS = `// Joint Arena SDK —— 由游戏运行时注入的全局对象
+/**
+ * Monaco 里 `sdk` 全局的类型声明（与 workerSdk.ts 的运行时 API 保持一致）。
+ * 声明体只有一份；头部注释是给玩家看的说明文字，按语言分两份。
+ */
+const HEADERS: Record<AppLocale, string> = {
+  'zh-CN': `// Joint Arena SDK —— 由游戏运行时注入的全局对象
 // 统一部件 key：行动（关节驱动）/ 外观（颜色贴图）/ 传感器全部用同一套部件名。
 // 动作作用于该部件绕父部件的旋转，如 P.FOREARM_R = 前臂（弯肘）、P.SHIN_R = 小腿（弯膝）。
-declare const sdk: {
-  /** 统一部件枚举：sdk.P.TORSO / sdk.P.FOREARM_R … */
+// sdk.P 是统一部件枚举（sdk.P.TORSO / sdk.P.FOREARM_R …）；sdk.PARTS 是可用部件名列表。`,
+  'en-US': `// Joint Arena SDK — a global object injected by the game runtime
+// One set of part keys covers everything: motion (joint motors), looks (color / texture) and sensors.
+// An action rotates that part around its parent, e.g. P.FOREARM_R = forearm (extend elbow), P.SHIN_R = shin (bend knee).
+// sdk.P is the part-key enum (sdk.P.TORSO / sdk.P.FOREARM_R …); sdk.PARTS lists the valid part names.`,
+}
+
+const DECLARATIONS = `declare const sdk: {
   P: {
     readonly HIP: 'hip'
     readonly TORSO: 'torso'
@@ -22,7 +34,6 @@ declare const sdk: {
     readonly SHIN_L: 'shin_L'
     readonly FOOT_L: 'foot_L'
   }
-  /** 可用部件名列表 */
   PARTS: string[]
 
   onInit(cb: () => void): void
@@ -79,3 +90,8 @@ declare const sdk: {
   stopMoving(): void
 }
 `
+
+/** 当前语言下的 SDK 类型声明（Monaco extraLib 的内容） */
+export function sdkDts(): string {
+  return `${HEADERS[locale.value]}\n${DECLARATIONS}`
+}

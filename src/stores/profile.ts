@@ -1,4 +1,5 @@
 import { reactive, watch } from 'vue'
+import { t } from '../i18n'
 
 export interface Profile {
   name: string
@@ -19,7 +20,8 @@ function load(): Profile {
     }
   }
   catch { /* 损坏则重置 */ }
-  return { name: '格斗者', battles: 0, wins: 0, draws: 0 }
+  // 默认名是首次启动时的展示数据，按当时语言落一份，之后归用户自己改
+  return { name: t('profile.defaultName'), battles: 0, wins: 0, draws: 0 }
 }
 
 /** 本地用户档案：大厅展示 + 训练模式战果（无后端，localStorage 持久化） */

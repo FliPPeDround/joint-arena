@@ -49,6 +49,7 @@
     "reka-ui": "catalog:",
     "vue": "catalog:frontend",
     "vue-afloat": "catalog:frontend",
+    "vue-i18n": "catalog:frontend",
     "vue-router": "catalog:frontend"
   },
   "devDependencies": {

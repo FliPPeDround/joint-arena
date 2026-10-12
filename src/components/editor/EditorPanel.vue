@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import LayoutTabs from '@antfu/design/components/Layout/LayoutTabs.vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { t } from '../../i18n'
 import { uiStore } from '../../stores/ui'
 import CodeTab from './CodeTab.vue'
 import DocsTab from './DocsTab.vue'
@@ -9,12 +10,12 @@ import TextureTab from './TextureTab.vue'
 
 const tab = ref('code')
 
-const tabs = [
-  { value: 'code', label: '代码' },
-  { value: 'docs', label: 'SDK 文档' },
-  { value: 'tex', label: '纹理' },
-  { value: 'settings', label: '设置' },
-]
+const tabs = computed(() => [
+  { value: 'code', label: t('editor.tabCode') },
+  { value: 'docs', label: t('editor.tabDocs') },
+  { value: 'tex', label: t('editor.tabTex') },
+  { value: 'settings', label: t('editor.tabSettings') },
+])
 </script>
 
 <template>

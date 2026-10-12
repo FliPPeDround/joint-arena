@@ -9,6 +9,21 @@ body {
   overflow: hidden;
 }
 
+/* 拉丁语排版修正：大字距（tracking-[0.3em] 这类）是给方块字调校的中文字感，
+   英文同字号会散架 —— 收到 0.1em 并统一大写才像展示字标题。
+   选择器带 html[lang] 属性，特异性高于元素上的 tracking 工具类，故能覆写；
+   中文侧不命中该选择器，视觉与原来完全一致 */
+html[lang^="en"] .i18n-display {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* 预设卡上的「内置」角标：英文标签更长，按字号缩一档（DisplayBadge 的内边距随 font-size 缩放），
+   免得压住缩略图里白膜角色的头 */
+html[lang^="en"] .preset-builtin-badge {
+  font-size: 0.78em;
+}
+
 /* 玩家身份色：属于游戏领域数据（HUD 血条 / 状态徽标），非 UI 主题色 */
 :root {
   --ja-p1: #4d9fff;

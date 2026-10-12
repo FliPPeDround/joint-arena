@@ -1,6 +1,7 @@
 import type { HostToWorker, WorkerToHost } from './protocol'
 /// <reference lib="webworker" />
 import { CFG } from '../config'
+import { SdkError } from './sdkError'
 import { createSdk } from './workerSdk'
 
 const workerScope = globalThis as unknown as Worker
@@ -86,9 +87,14 @@ workerScope.onmessage = (ev: MessageEvent<HostToWorker>) => {
   }
   catch (err) {
     // init 阶段错误为致命（代码没有跑起来）；运行时错误交给宿主计数处理
+    // SdkError 只上报错误码 + 参数（文案由宿主按当前语言渲染）；
+    // 玩家代码自己抛的异常仍按原文 + 堆栈上报，那是有用的调试信息
+    const sdkErr = err instanceof SdkError ? err : null
     workerScope.postMessage({
       type: 'error',
-      message: err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(err),
+      message: sdkErr ? sdkErr.message : err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(err),
+      key: sdkErr?.key,
+      args: sdkErr?.args,
       fatal: !sandbox,
     } satisfies WorkerToHost)
   }

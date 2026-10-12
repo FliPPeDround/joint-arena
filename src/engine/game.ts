@@ -1,4 +1,5 @@
 import type { FighterId } from '../config'
+import type { DisplayMsg } from '../i18n'
 import type { NetworkAdapter } from '../net/networkStub'
 import type { FighterSnapshot, SdkCommand, Snapshot } from '../sdk/protocol'
 import type { SandboxHostHooks } from '../sdk/sandboxHost'
@@ -11,7 +12,8 @@ import { watch } from 'vue'
 import { CombatSystem } from '../combat/combatSystem'
 import { CFG } from '../config'
 import { clamp } from '../core/utils'
-import { BOT_CODE } from '../editor/examples'
+import { botCode } from '../editor/examples'
+import { errorToText, msg, rawMsg } from '../i18n'
 import { InputSystem } from '../input/inputSystem'
 import { createNetworkAdapter } from '../net/networkStub'
 import { BALANCE } from '../physics/fighterBody'
@@ -20,6 +22,7 @@ import { DebugView } from '../render/debugView'
 import { FighterView } from '../render/fighterView'
 import { arenaCamX, GameApp } from '../render/gameApp'
 import { SandboxHost } from '../sdk/sandboxHost'
+import { SdkError } from '../sdk/sdkError'
 import { ALL_JOINTS, ALL_PARTS } from '../skeleton/partDefs'
 import { codes, gameApi, gameStore, pushConsole, resetSessionState, setBoundKeys, setStatus } from '../stores/game'
 import { recordMatchResult } from '../stores/profile'
@@ -92,7 +95,7 @@ export async function createGame(canvas: HTMLCanvasElement, opts: CreateGameOpti
 
   // HUD：直接写入响应式 store（同值赋值不会触发 Vue 副作用，每帧写也廉价）
   const hud = {
-    banner(main: string, sub = ''): void {
+    banner(main: DisplayMsg, sub: DisplayMsg | null = null): void {
       gameStore.hud.banner = { visible: true, main, sub }
     },
     hideBanner(): void {
@@ -108,18 +111,19 @@ export async function createGame(canvas: HTMLCanvasElement, opts: CreateGameOpti
   // 4) 沙箱
   const sandboxHooks: SandboxHostHooks = {
     applyCmds: (id, cmds) => applyCmds(id, cmds),
-    onLog: (id, text, level) => pushConsole(level, text, id),
+    // 玩家 sdk.log 的输出是自由文本，按原文进控制台；引擎自己的话一律走消息键，切语言即时重译
+    onLog: (id, text, level) => pushConsole(level, rawMsg(text), id),
     onError: (id, message, fatal) => {
       pushConsole('error', message, id)
-      setStatus(id, fatal ? '出错已暂停' : '运行时错误', true)
+      setStatus(id, fatal ? 'status.pausedOnError' : 'status.runtimeError', true)
     },
     onStall: (id) => {
-      pushConsole('error', '疑似死循环（600ms 未响应），已终止该角色逻辑。修改代码后重新「▶ 运行」。', id)
-      setStatus(id, '死循环已终止', true)
+      pushConsole('error', msg('console.stallKilled'), id)
+      setStatus(id, 'status.loopKilled', true)
     },
     onReady: (id) => {
-      pushConsole('info', '✔ 代码已加载', id)
-      setStatus(id, '运行中')
+      pushConsole('info', msg('console.codeLoaded'), id)
+      setStatus(id, 'status.running')
     },
     onBoundKeys: (id, keys) => setBoundKeys(id, keys),
   }
@@ -137,14 +141,14 @@ export async function createGame(canvas: HTMLCanvasElement, opts: CreateGameOpti
       return cached
     const resp = await fetch(url)
     if (!resp.ok)
-      throw new Error(`贴图加载失败 HTTP ${resp.status}`)
+      throw new SdkError('textureHttp', { status: resp.status })
     const type = resp.headers.get('content-type') ?? ''
     if (/svg/i.test(type) || /\.svg(?:\?|$)/i.test(url))
-      throw new Error('不允许使用 SVG 贴图')
+      throw new SdkError('textureSvg')
     const blob = await resp.blob()
     const bmp = await createImageBitmap(blob)
     if (bmp.width > 1024 || bmp.height > 1024)
-      throw new Error(`贴图过大: ${bmp.width}x${bmp.height}（上限 1024）`)
+      throw new SdkError('textureTooBig', { w: bmp.width, h: bmp.height, cap: 1024 })
     const base = new PIXI.BaseTexture(bmp)
     const tex = new PIXI.Texture(base)
     texCache.set(url, tex)
@@ -170,7 +174,7 @@ export async function createGame(canvas: HTMLCanvasElement, opts: CreateGameOpti
             loadTextureFromUrl(cmd.url)
               .then(tex => view.setPartTexture(cmd.part, tex))
               .catch((err) => {
-                pushConsole('error', `setPartTexture(${cmd.part}) ${err instanceof Error ? err.message : err}`, id)
+                pushConsole('error', msg('console.textureCmdFailed', { part: cmd.part, msg: errorToText(err) }), id)
               })
             break
           case 'setPartBitmap': {
@@ -187,7 +191,7 @@ export async function createGame(canvas: HTMLCanvasElement, opts: CreateGameOpti
         }
       }
       catch (err) {
-        pushConsole('error', `指令 ${cmd.c} 执行失败: ${err instanceof Error ? err.message : err}`, id)
+        pushConsole('error', msg('console.cmdFailed', { cmd: cmd.c, msg: errorToText(err) }), id)
       }
     }
   }
@@ -239,7 +243,7 @@ export async function createGame(canvas: HTMLCanvasElement, opts: CreateGameOpti
 
   // 7) 回合控制（UI 面板与 __JA 钩子共用）
   // 演武局固定使用内建 AI 代码，绝不读写用户的 codes store（那是编辑器/对战的数据源）
-  const codeOf = (id: FighterId): string => mode.demo ? BOT_CODE : codes[id]
+  const codeOf = (id: FighterId): string => mode.demo ? botCode() : codes[id]
   // InputSystem 会丢弃 #editor-panel 内的按键（避免编辑器打字误触游戏），
   // 点完「运行 / 重置回合」后焦点仍留在面板按钮上，会把后续 bindKey 按键全部吞掉，
   // 所以每次启动/重置时把焦点还给页面。
@@ -253,20 +257,20 @@ export async function createGame(canvas: HTMLCanvasElement, opts: CreateGameOpti
     releasePanelFocus()
     for (const id of activeFighters()) {
       sandboxes[id].start(codeOf(id))
-      setStatus(id, '加载中…')
+      setStatus(id, 'status.loading')
     }
-    pushConsole('sys', mode.solo ? '▶ 启动预览（P1）' : '▶ 启动两个角色逻辑')
+    pushConsole('sys', msg(mode.solo ? 'console.runSolo' : 'console.runBoth'))
     resetRound()
   }
 
   function stopAll(): void {
     for (const id of FIGHTERS) {
       sandboxes[id].stop()
-      setStatus(id, '未运行')
+      setStatus(id, 'status.idle')
     }
     physics.p1.clearMotors()
     physics.p2.clearMotors()
-    pushConsole('sys', '■ 已停止所有角色逻辑')
+    pushConsole('sys', msg('console.stoppedAll'))
   }
 
   /** 只重摆站位（不含沙箱启动）：场景切换 / 需要静止开局时使用 */
@@ -283,10 +287,10 @@ export async function createGame(canvas: HTMLCanvasElement, opts: CreateGameOpti
       const sb = sandboxes[id]
       if (!sb.running || !sb.enabled) {
         sb.start(codeOf(id))
-        setStatus(id, '加载中…')
+        setStatus(id, 'status.loading')
       }
     }
-    pushConsole('sys', '↺ 回合已重置')
+    pushConsole('sys', msg('console.roundReset'))
   }
 
   // 8) 主循环（固定时间步）

@@ -1,20 +1,28 @@
 import type { FighterId } from '../config'
 import type { CreateGameOptions } from '../engine/game'
+import type { DisplayMsg, MsgKey } from '../i18n'
 import type { FighterState } from '../physics/fighterBody'
 import { reactive, shallowRef, watch } from 'vue'
-import { DEFAULT_CODE } from '../editor/examples'
+import { botCode } from '../editor/examples'
 
 export type ConsoleLevel = 'info' | 'warn' | 'error' | 'sys'
 
 export interface ConsoleLine {
   fighter: string
   level: ConsoleLevel
-  text: string
+  /** 引擎自己的话走消息键（切语言即时重译），玩家 sdk.log 输出与原始堆栈走 raw */
+  msg: DisplayMsg
 }
 
 export interface FighterStatus {
-  text: string
+  key: MsgKey
   error: boolean
+}
+
+export interface HudBanner {
+  visible: boolean
+  main: DisplayMsg | null
+  sub: DisplayMsg | null
 }
 
 export interface DebugToggles {
@@ -53,7 +61,7 @@ export const CONSOLE_MAX_LINES = 300
 const LS_KEY = (id: FighterId): string => `joint-arena.code.${id}`
 
 function loadCode(id: FighterId): string {
-  return localStorage.getItem(LS_KEY(id)) ?? DEFAULT_CODE[id]
+  return localStorage.getItem(LS_KEY(id)) ?? botCode()
 }
 
 /** 引擎 → UI 的单向数据：HUD / 控制台 / 状态 */
@@ -64,11 +72,11 @@ export const gameStore = reactive({
     hp: { P1: 100, P2: 100 } as Record<FighterId, number>,
     roundTime: 99,
     state: { P1: 'normal', P2: 'normal' } as Record<FighterId, FighterState>,
-    banner: { visible: false, main: '', sub: '' },
+    banner: { visible: false, main: null, sub: null } as HudBanner,
   },
   status: {
-    P1: { text: '未运行', error: false },
-    P2: { text: '未运行', error: false },
+    P1: { key: 'status.idle', error: false },
+    P2: { key: 'status.idle', error: false },
   } as Record<FighterId, FighterStatus>,
   /** 本回合胜负（null = 进行中）；引擎在分出胜负时写入并记入用户档案 */
   matchWinner: null as null | FighterId | 'draw',
@@ -84,10 +92,10 @@ export function resetSessionState(): void {
   gameStore.hud.hp = { P1: 100, P2: 100 }
   gameStore.hud.roundTime = 99
   gameStore.hud.state = { P1: 'normal', P2: 'normal' }
-  gameStore.hud.banner = { visible: false, main: '', sub: '' }
+  gameStore.hud.banner = { visible: false, main: null, sub: null }
   gameStore.matchWinner = null
-  gameStore.status.P1 = { text: '未运行', error: false }
-  gameStore.status.P2 = { text: '未运行', error: false }
+  gameStore.status.P1 = { key: 'status.idle', error: false }
+  gameStore.status.P2 = { key: 'status.idle', error: false }
   gameStore.boundKeys.P1 = []
   gameStore.boundKeys.P2 = []
   clearConsole()
@@ -107,14 +115,14 @@ watch(codes, (v) => {
 /** 引擎句柄（shallowRef：引擎对象体积大且无需深度响应） */
 export const gameApi = shallowRef<GameApi | null>(null)
 
-export function pushConsole(level: ConsoleLevel, text: string, fighter = ''): void {
-  gameStore.consoleLines.push({ fighter, level, text })
+export function pushConsole(level: ConsoleLevel, msg: DisplayMsg, fighter = ''): void {
+  gameStore.consoleLines.push({ fighter, level, msg })
   if (gameStore.consoleLines.length > CONSOLE_MAX_LINES)
     gameStore.consoleLines.splice(0, gameStore.consoleLines.length - CONSOLE_MAX_LINES)
 }
 
-export function setStatus(id: FighterId, text: string, error = false): void {
-  gameStore.status[id] = { text, error }
+export function setStatus(id: FighterId, key: MsgKey, error = false): void {
+  gameStore.status[id] = { key, error }
 }
 
 export function setBoundKeys(id: FighterId, keys: string[]): void {

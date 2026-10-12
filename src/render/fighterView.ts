@@ -2,7 +2,8 @@ import type { FighterBody } from '../physics/fighterBody'
 import type { DBArmatureDisplay, DBFactory } from '../types/dragonBonesApi'
 import * as PIXI from 'pixi.js'
 import { degToRad, worldRotToDb, wrapAngle } from '../core/utils'
-import { JOINTS, PART_PIVOT_UV, PARTS, REST_POSE, restRotRad } from '../skeleton/partDefs'; import { buildSkeletonJSON } from '../skeleton/skeletonData'
+import { SdkError } from '../sdk/sdkError'; import { JOINTS, PART_PIVOT_UV, PARTS, REST_POSE, restRotRad } from '../skeleton/partDefs'
+import { buildSkeletonJSON } from '../skeleton/skeletonData'
 
 export interface PartPose {
   /** 轴心世界坐标（y 向上） */
@@ -53,10 +54,10 @@ export class FighterView {
       const slotName = PARTS[bone].slot
       const slot = display.armature.getSlot(slotName)
       if (!slot)
-        throw new Error(`插槽缺失: ${slotName}`)
+        throw new SdkError('slotMissing', { slot: slotName })
       const spr = (slot.display ?? (slot as unknown as { _renderDisplay: PIXI.Sprite })._renderDisplay) as PIXI.Sprite
       if (!spr || !(spr instanceof PIXI.Sprite))
-        throw new Error(`显示对象缺失: ${bone}`)
+        throw new SdkError('displayMissing', { bone })
       spr.anchor.set(PART_PIVOT_UV[0], PART_PIVOT_UV[1])
       this.sprites[bone] = spr
       this.defaultTextures[bone] = spr.texture
@@ -213,14 +214,14 @@ export class FighterView {
   /** ---------------- 纹理与外观（SDK 命令落地点） ---------------- */
   private assertPart(part: string): void {
     if (!this.sprites[part])
-      throw new Error(`未知部件: ${part}`)
+      throw new SdkError('unknownPart', { name: part, parts: Object.keys(PARTS).join(', ') })
   }
 
   setPartColor(part: string, color: number | string): void {
     this.assertPart(part)
     const n = typeof color === 'string' ? Number.parseInt(color.replace('#', ''), 16) : color
     if (!Number.isFinite(n))
-      throw new Error(`颜色格式错误: ${color}`)
+      throw new SdkError('colorFormat', { color: String(color) })
     this.visual[part].color = n
     this.sprites[part].tint = n
   }

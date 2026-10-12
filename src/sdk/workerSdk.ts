@@ -11,6 +11,7 @@ import {
   JOINT_BY_PART,
   PARTS,
 } from '../skeleton/partDefs'
+import { SdkError } from './sdkError'
 
 export interface RayHit {
   hit: boolean
@@ -59,28 +60,28 @@ export function createSdk(post: (m: WorkerToHost) => void) {
     if (j)
       return j.joint
     if (key === 'hip')
-      throw new Error('hip 是根部件，没有可驱动关节；移动请用 setRootVelocity / applyRootForce')
-    throw new Error(`未知部件 "${key}"，可用: ${ALL_PARTS.join(', ')}（或用 sdk.P 枚举）`)
+      throw new SdkError('hipIsRoot')
+    throw new SdkError('unknownPartJoint', { key, parts: ALL_PARTS.join(', ') })
   }
 
   function needSnapshot(): Snapshot {
     if (!snapshot)
-      throw new Error('游戏尚未开始（onTick 之外无法读取状态）')
+      throw new SdkError('noSnapshot')
     return snapshot
   }
   function assertPart(name: string): void {
     if (!VALID_PARTS.has(name))
-      throw new Error(`未知部件 "${name}"，可用: ${ALL_PARTS.join(', ')}`)
+      throw new SdkError('unknownPart', { name, parts: ALL_PARTS.join(', ') })
   }
   function push(cmd: SdkCommand): void {
     if (cmds.length >= 500)
-      throw new Error('单帧 SDK 指令超过上限（500），请减少每帧调用')
+      throw new SdkError('tooManyCmds')
     cmds.push(cmd)
   }
   function num(v: unknown, name: string): number {
     const n = Number(v)
     if (!Number.isFinite(n))
-      throw new Error(`${name} 必须是有限数字，收到 ${String(v)}`)
+      throw new SdkError('notFinite', { name, got: String(v) })
     return n
   }
 
@@ -267,7 +268,7 @@ export function createSdk(post: (m: WorkerToHost) => void) {
     // ---------- 输入 ----------
     bindKey(key: string, cb: () => void) {
       if (typeof key !== 'string' || typeof cb !== 'function')
-        throw new Error('bindKey(key, callback) 参数错误')
+        throw new SdkError('bindKeyArgs')
       const k = key.toLowerCase()
       if (!keyCbs.has(k))
         keyCbs.set(k, [])
@@ -276,7 +277,7 @@ export function createSdk(post: (m: WorkerToHost) => void) {
     },
     bindMouse(button: string | number, cb: (e: { button: number, x: number, y: number }) => void) {
       if (typeof cb !== 'function')
-        throw new Error('bindMouse(button, callback) 参数错误')
+        throw new SdkError('bindMouseArgs')
       const b = mouseButtonIndex(button)
       if (!mouseCbs.has(b))
         mouseCbs.set(b, [])
@@ -300,7 +301,7 @@ export function createSdk(post: (m: WorkerToHost) => void) {
     setPartTexture(part: string, textureUrl: string) {
       assertPart(part)
       if (typeof textureUrl !== 'string' || !textureUrl)
-        throw new Error('textureUrl 必须是非空字符串')
+        throw new SdkError('textureUrlArg')
       push({ c: 'setPartTexture', part, url: textureUrl })
     },
     setPartColor(part: string, color: number | string) {
@@ -310,18 +311,18 @@ export function createSdk(post: (m: WorkerToHost) => void) {
     setPartTextureFromCanvas(part: string, canvas: OffscreenCanvas) {
       assertPart(part)
       if (!(canvas instanceof OffscreenCanvas)) {
-        throw new TypeError('setPartTextureFromCanvas 需要 OffscreenCanvas（用 sdk.createCanvas 创建）')
+        throw new SdkError('offscreenRequired')
       }
       const w = canvas.width; const h = canvas.height
       if (w <= 0 || h <= 0 || w * h > 1024 * 1024)
-        throw new Error(`画布尺寸不合法: ${w}x${h}`)
+        throw new SdkError('badCanvasSize', { w, h })
       const bitmap = canvas.transferToImageBitmap()
       push({ c: 'setPartBitmap', part, bitmap })
     },
     createCanvas(w: number, h: number): OffscreenCanvas {
       const cw = Math.round(num(w, 'w')); const ch = Math.round(num(h, 'h'))
       if (cw <= 0 || ch <= 0 || cw * ch > 1024 * 1024)
-        throw new Error(`画布尺寸不合法: ${cw}x${ch}`)
+        throw new SdkError('badCanvasSize', { w: cw, h: ch })
       return new OffscreenCanvas(cw, ch)
     },
     resetPart(part: string) {
@@ -430,7 +431,7 @@ export function createSdk(post: (m: WorkerToHost) => void) {
         }
       }
       catch (err) {
-        post({ type: 'error', message: `事件回调出错: ${String(err)}`, fatal: false })
+        post({ type: 'error', message: String(err), key: 'sdkErr.eventCbError', args: { err: String(err) }, fatal: false })
       }
     }
     if (cmds.length) {
@@ -443,7 +444,7 @@ export function createSdk(post: (m: WorkerToHost) => void) {
     for (const cb of eventCbs) {
       try { cb(e) }
       catch (err) {
-        post({ type: 'error', message: `onEvent 回调出错: ${String(err)}`, fatal: false })
+        post({ type: 'error', message: String(err), key: 'sdkErr.onEventCbError', args: { err: String(err) }, fatal: false })
       }
     }
   }

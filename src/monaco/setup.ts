@@ -2,7 +2,8 @@
 import type { FighterId } from '../config'
 import * as monaco from 'monaco-editor'
 import { watch } from 'vue'
-import { SDK_DTS } from '../editor/sdkDts'
+import { sdkDts } from '../editor/sdkDts'
+import { locale } from '../i18n'
 import { codes } from '../stores/game'
 import EditorWorker from './editorWorker.ts?worker'
 import TsWorker from './tsWorker.ts?worker'
@@ -23,7 +24,15 @@ jsDefaults.setDiagnosticsOptions({
   noSemanticValidation: true,
   noSyntaxValidation: false,
 })
-jsDefaults.addExtraLib(SDK_DTS, 'joint-arena-sdk.d.ts')
+// sdk 的类型声明随语言切换：同一个 uri 覆盖写入，TS language service 拿到的就是新文案
+const SDK_DTS_URI = 'joint-arena-sdk.d.ts'
+
+function applySdkDts(): void {
+  jsDefaults.addExtraLib(sdkDts(), SDK_DTS_URI)
+}
+
+applySdkDts()
+watch(locale, applySdkDts)
 
 monaco.editor.defineTheme('ja-dark', {
   base: 'vs-dark',

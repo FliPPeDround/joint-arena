@@ -1,4 +1,5 @@
 import type { FighterId } from '../config'
+import type { SdkErrorArgs, SdkErrorKey } from './sdkError'
 
 /** ---------------- 快照（主线程 → Worker，SDK 同步读） ---------------- */
 export interface BoneSnapshot {
@@ -79,5 +80,9 @@ export type WorkerToHost
     | { type: 'tickDone', cmds: SdkCommand[] }
     | { type: 'cmds', cmds: SdkCommand[] }
     | { type: 'log', text: string, level: 'info' | 'warn' | 'error' }
-    | { type: 'error', message: string, fatal: boolean }
+    /**
+     * 错误：key / args 是 SdkError 的错误码与插值参数（宿主按当前语言查文案），
+     * message 始终是原文，给玩家代码自己抛出的异常兜底。
+     */
+    | { type: 'error', message: string, fatal: boolean, key?: SdkErrorKey, args?: SdkErrorArgs }
     | { type: 'boundKeys', keys: string[] }

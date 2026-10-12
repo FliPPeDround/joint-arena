@@ -44,6 +44,7 @@ catalogs:
     vue: ^3.5.43
     # @antfu/design 的 peer 依赖（tooltip 指令）
     vue-afloat: ^0.2.0
+    vue-i18n: ^11.4.14
     vue-router: ^4.5.0
   # 游戏引擎（渲染 / 物理 / 设计系统）
   prod:

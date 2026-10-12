@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import type { FighterId } from '../config'
+import type { MsgKey } from '../i18n'
+import type { FighterState } from '../physics/fighterBody'
 import { computed } from 'vue'
 import { CFG } from '../config'
+import { t } from '../i18n'
 import { gameStore } from '../stores/game'
 
-const STATE_LABEL: Record<string, string> = {
-  ko: 'KO',
-  down: '倒地',
-  stun: '硬直',
+/** 异常姿态的状态位文案键；normal（正常）不占位，没提示可给 */
+const STATE_KEY: Partial<Record<FighterState, MsgKey>> = {
+  ko: 'hud.ko',
+  down: 'hud.down',
+  stun: 'hud.stun',
 }
 
 function hpPct(id: FighterId): number {
@@ -19,7 +23,8 @@ function hpText(id: FighterId): string {
 }
 
 function stateLabel(id: FighterId): string {
-  return STATE_LABEL[gameStore.hud.state[id]] ?? ''
+  const key = STATE_KEY[gameStore.hud.state[id]]
+  return key ? t(key) : ''
 }
 
 function fillStyle(id: FighterId): Record<string, string> {
@@ -53,7 +58,7 @@ const nameColor = computed(() => ({ P1: 'var(--ja-p1)', P2: 'var(--ja-p2)' }))
           class="text-mini mt-0.5 h-4 truncate"
           :class="gameStore.status[id].error ? 'color-scale-critical' : 'text-amber-300'"
         >
-          {{ gameStore.status[id].error ? gameStore.status[id].text : stateLabel(id) }}
+          {{ gameStore.status[id].error ? t(gameStore.status[id].key) : stateLabel(id) }}
         </div>
       </div>
       <div

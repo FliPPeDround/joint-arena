@@ -3,8 +3,9 @@ import type { FighterId } from '../../config'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
 import FormSelect from '@antfu/design/components/Form/FormSelect.vue'
-import { ref } from 'vue'
-import { EXAMPLES } from '../../editor/examples'
+import { computed, ref } from 'vue'
+import { EXAMPLE_IDS, exampleCode, exampleName } from '../../editor/examples'
+import { msg, t } from '../../i18n'
 import { codes, gameApi, gameStore, pushConsole } from '../../stores/game'
 import { presets, saveCodeToPreset } from '../../stores/presets'
 import CodeEditor from './CodeEditor.vue'
@@ -19,16 +20,19 @@ const fighterOptions = [
   { value: 'P2', label: 'P2' },
 ]
 
+/** 下拉项随语言重算（示例名是目录里的标签） */
+const exampleOptions = computed(() => EXAMPLE_IDS.map(id => ({ value: id, label: exampleName(id) })))
+
 const exampleId = ref<string>()
 
 function loadExample(id: string | undefined): void {
   if (!id)
     return
-  const ex = EXAMPLES.find(e => e.id === id)
-  if (!ex)
+  const picked = EXAMPLE_IDS.find(e => e === id)
+  if (!picked)
     return
-  codes[fighter.value] = ex.code
-  pushConsole('sys', `已加载示例「${ex.name}」到 ${fighter.value}`)
+  codes[fighter.value] = exampleCode(picked)
+  pushConsole('sys', msg('console.loadedExample', { name: exampleName(picked), fighter: fighter.value }))
   exampleId.value = undefined
 }
 
@@ -36,7 +40,7 @@ function loadExample(id: string | undefined): void {
 function saveToPreset(): void {
   const saved = saveCodeToPreset(presets.selectedId, codes.P1)
   if (saved)
-    pushConsole('sys', `P1 代码已保存到预设「${saved.name}」`)
+    pushConsole('sys', msg('console.presetSavedTo', { name: saved.name }))
 }
 </script>
 
@@ -48,26 +52,25 @@ function saveToPreset(): void {
       <FormSelect
         v-model="exampleId"
         class="min-w-30 flex-1!"
-        placeholder="— 加载示例 —"
-        :options="EXAMPLES.map(e => ({ value: e.id, label: e.name }))"
+        :placeholder="t('editor.loadExample')"
+        :options="exampleOptions"
         @update:model-value="loadExample"
       />
       <div class="flex gap-1.5">
         <ActionButton
           v-if="!solo" size="sm" icon="i-ph:floppy-disk" :disabled="fighter !== 'P1'"
-          title="把 P1 当前代码保存到选中的预设"
-          @click="saveToPreset()"
+          :title="t('editor.saveToPresetTip')" @click="saveToPreset()"
         >
-          存为预设
+          {{ t('editor.saveAsPreset') }}
         </ActionButton>
         <ActionButton variant="primary" @click="gameApi?.run()">
-          ▶ 运行
+          {{ t('editor.run') }}
         </ActionButton>
         <ActionButton @click="gameApi?.stop()">
-          ■ 停止
+          {{ t('editor.stop') }}
         </ActionButton>
         <ActionButton @click="gameApi?.reset()">
-          ↺ 重置回合
+          {{ t('editor.resetRound') }}
         </ActionButton>
       </div>
     </div>
@@ -79,7 +82,7 @@ function saveToPreset(): void {
         class="text-mini px-2.5 py-0.5"
         :class="gameStore.status[id.value as FighterId].error ? 'color-scale-critical' : 'color-muted'"
       >
-        {{ id.value }}: {{ gameStore.status[id.value as FighterId].text }}
+        {{ id.value }}: {{ t(gameStore.status[id.value as FighterId].key) }}
       </div>
     </div>
 

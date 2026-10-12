@@ -1,6 +1,22 @@
 import type { AtlasFrame } from '../stores/game'
 // @env browser
+import { t } from '../i18n'
 import { partTemplate, TEMPLATE_SCALE } from '../skeleton/whiteboxAtlas'
+
+/** 图集帧缺失时也要给出的规格说明：模板画布尺寸 / 逻辑尺寸 / 锚点位置 */
+function templateInfo(part: string): string {
+  const tpl = partTemplate(part)
+  return t('tex.info', {
+    part,
+    cw: tpl.cw,
+    ch: tpl.ch,
+    lw: tpl.lw,
+    lh: tpl.lh,
+    scale: TEMPLATE_SCALE,
+    px: Math.round(tpl.px),
+    py: tpl.py,
+  })
+}
 
 /** 在预览画布上绘制当前部件的图集帧 + 锚点标记 */
 export function drawTexPreview(
@@ -13,9 +29,8 @@ export function drawTexPreview(
   g.clearRect(0, 0, cv.width, cv.height)
   g.fillStyle = '#191d29'
   g.fillRect(0, 0, cv.width, cv.height)
-  const tpl = partTemplate(part)
   if (!frame || !source)
-    return `${part}  画布 ${tpl.cw}×${tpl.ch}px（逻辑 ${tpl.lw}×${tpl.lh}，×${TEMPLATE_SCALE}），锚点=顶边中点 (${Math.round(tpl.px)},${tpl.py})`
+    return templateInfo(part)
   const scale = Math.min(160 / Math.max(frame.w, 1), 160 / Math.max(frame.h, 1), 4)
   const dw = frame.w * scale
   const dh = frame.h * scale
@@ -35,8 +50,8 @@ export function drawTexPreview(
   // 方向提示
   g.fillStyle = '#7d88a3'
   g.font = '11px monospace'
-  g.fillText('▲锚点(顶边中点) 贴图向下延伸', 8, cv.height - 8)
-  return `${part}  画布 ${tpl.cw}×${tpl.ch}px（逻辑 ${tpl.lw}×${tpl.lh}，×${TEMPLATE_SCALE}），锚点=顶边中点 (${Math.round(tpl.px)},${tpl.py})`
+  g.fillText(t('tex.anchorHint'), 8, cv.height - 8)
+  return templateInfo(part)
 }
 
 /** 下载当前部件的纹理模板 PNG（虚线外框 + 锚点十字 + 尺寸标注） */

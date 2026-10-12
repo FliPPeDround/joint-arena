@@ -1,4 +1,5 @@
 import type { FighterId } from '../config'
+import type { DisplayMsg } from '../i18n'
 import type {
   HostToWorker,
   InputEventMsg,
@@ -8,11 +9,13 @@ import type {
   WorkerToHost,
 } from './protocol'
 import { CFG } from '../config'
+import { msg, rawMsg } from '../i18n'
 
 export interface SandboxHostHooks {
   applyCmds: (id: FighterId, cmds: SdkCommand[]) => void
   onLog: (id: FighterId, text: string, level: 'info' | 'warn' | 'error') => void
-  onError: (id: FighterId, message: string, fatal: boolean) => void
+  /** 错误以消息引用上报：SDK 错误是目录键，玩家异常是原样文本 */
+  onError: (id: FighterId, message: DisplayMsg, fatal: boolean) => void
   onStall: (id: FighterId) => void
   onBoundKeys: (id: FighterId, keys: string[]) => void
   onReady: (id: FighterId) => void
@@ -47,7 +50,7 @@ export class SandboxHost {
     this.worker = worker
     worker.onmessage = (ev: MessageEvent<WorkerToHost>) => this.handle(ev.data)
     worker.onerror = (ev) => {
-      this.hooks.onError(this.id, `Worker 错误: ${ev.message}`, true)
+      this.hooks.onError(this.id, msg('console.workerError', { msg: ev.message }), true)
     }
     this.running = true
     this.ready = false
@@ -87,20 +90,23 @@ export class SandboxHost {
       case 'log':
         this.hooks.onLog(this.id, m.text, m.level)
         break
-      case 'error':
+      case 'error': {
+        // key 存在 = 我们的 SDK 错误码，交给目录翻译；否则显示 Worker 原文
+        const message = m.key ? msg(m.key, m.args) : rawMsg(m.message)
         if (m.fatal) {
           this.enabled = false
-          this.hooks.onError(this.id, m.message, true)
+          this.hooks.onError(this.id, message, true)
         }
         else {
           this.consecutiveErrors++
-          this.hooks.onError(this.id, m.message, false)
+          this.hooks.onError(this.id, message, false)
           if (this.consecutiveErrors >= 5) {
             this.enabled = false
-            this.hooks.onError(this.id, `${this.id} 连续出错 5 次，已暂停该角色逻辑（按「重置回合」恢复）`, true)
+            this.hooks.onError(this.id, msg('console.errorStreak', { id: this.id }), true)
           }
         }
         break
+      }
       case 'boundKeys':
         this.hooks.onBoundKeys(this.id, m.keys)
         break

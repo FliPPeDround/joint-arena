@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '../../i18n'
 import { toggleEditorPanel, uiStore } from '../../stores/ui'
 
 function onClick(e: MouseEvent): void {
@@ -14,8 +15,8 @@ function onClick(e: MouseEvent): void {
     type="button"
     class="color-muted outline-none border-l border-base bg-base flex flex-col w-6 cursor-pointer pointer-events-auto transition-[right,background-color,color] duration-250 ease-out items-center inset-y-0 justify-center absolute hover:color-base hover:bg-hover focus-visible:ring-2 focus-visible:ring-primary-500/40 focus-visible:ring-inset"
     :class="uiStore.panelOpen ? 'right-120' : 'right-0'"
-    :aria-label="uiStore.panelOpen ? '收起工作区' : '展开工作区'"
-    :title="uiStore.panelOpen ? '收起工作区' : '展开工作区'"
+    :aria-label="t(uiStore.panelOpen ? 'panel.collapse' : 'panel.expand')"
+    :title="t(uiStore.panelOpen ? 'panel.collapse' : 'panel.expand')"
     @click="onClick"
   >
     <span

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ConsoleLevel } from '../../stores/game'
 import { nextTick, ref, watch } from 'vue'
+import { formatMsg, t } from '../../i18n'
 import { gameStore } from '../../stores/game'
 
 const el = ref<HTMLElement>()
@@ -22,7 +23,7 @@ const LEVEL_CLASS: Record<ConsoleLevel, string> = {
 <template>
   <div class="border-t border-base">
     <div class="text-micro color-muted px-2.5 py-0.5 border-b border-base bg-secondary">
-      控制台
+      {{ t('editor.consoleTitle') }}
     </div>
     <div ref="el" class="text-mini leading-relaxed font-mono px-2 py-1 bg-sunken h-37.5 overflow-y-auto">
       <div
@@ -31,7 +32,7 @@ const LEVEL_CLASS: Record<ConsoleLevel, string> = {
         class="whitespace-pre-wrap"
         :class="LEVEL_CLASS[line.level]"
       >
-        {{ line.fighter ? `[${line.fighter}] ` : '' }}{{ line.text }}
+        {{ line.fighter ? `[${line.fighter}] ` : '' }}{{ formatMsg(line.msg) }}
       </div>
     </div>
   </div>
