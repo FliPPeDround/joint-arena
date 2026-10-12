@@ -1,0 +1,71 @@
+{
+  "name": "joint-arena",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@12.5.1",
+  "description": "可编程关节格斗 Web 游戏原型 — 玩家通过 SDK 代码从关节级别控制白膜骨架角色进行物理格斗",
+  "author": "FliPPeDround",
+  "license": "MIT",
+  "homepage": "https://github.com/FliPPeDround/joint-arena#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FliPPeDround/joint-arena.git"
+  },
+  "bugs": {
+    "url": "https://github.com/FliPPeDround/joint-arena/issues"
+  },
+  "keywords": [
+    "game",
+    "physics",
+    "rapier",
+    "pixijs",
+    "dragonbones",
+    "vue",
+    "monaco-editor",
+    "programming-game"
+  ],
+  "engines": {
+    "node": ">=22.20.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "lint": "eslint --cache .",
+    "lint:fix": "eslint --fix .",
+    "ci": "pnpm run lint && pnpm run typecheck && pnpm run build",
+    "prepare": "skills-npm"
+  },
+  "dependencies": {
+    "@antfu/design": "catalog:prod",
+    "@antfu/skills": "catalog:prod",
+    "@dimforge/rapier2d-compat": "catalog:prod",
+    "@vueuse/core": "catalog:frontend",
+    "monaco-editor": "catalog:frontend",
+    "pixi-dragonbones": "catalog:prod",
+    "pixi.js": "catalog:prod",
+    "reka-ui": "catalog:",
+    "vue": "catalog:frontend",
+    "vue-afloat": "catalog:frontend",
+    "vue-router": "catalog:frontend"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "catalog:dev",
+    "@iconify-json/ph": "catalog:",
+    "@unocss/eslint-plugin": "catalog:dev",
+    "@unocss/reset": "catalog:dev",
+    "@unocss/transformer-directives": "catalog:dev",
+    "@vitejs/plugin-vue": "catalog:dev",
+    "colorjs.io": "catalog:",
+    "eslint": "catalog:dev",
+    "eslint-plugin-slop": "catalog:dev",
+    "eslint-plugin-sonarjs": "catalog:dev",
+    "skills-npm": "catalog:dev",
+    "typescript": "catalog:dev",
+    "unocss": "catalog:dev",
+    "vite": "catalog:dev",
+    "vue-tsc": "catalog:dev"
+  }
+}

@@ -1,0 +1,119 @@
+/* 全局基础样式：reset + 设计系统 + 游戏专属领域色 */
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  overflow: hidden;
+}
+
+/* 玩家身份色：属于游戏领域数据（HUD 血条 / 状态徽标），非 UI 主题色 */
+:root {
+  --ja-p1: #4d9fff;
+  --ja-p2: #ff5d7e;
+  --ja-hp-low: #e0562f;
+  /* 场景品牌绿（gameApp.ts SCENE.accent / 主题 primary-400），大厅 HUD 装饰与其同源 */
+  --ja-accent: #7eb267;
+}
+
+/* 大厅舞台遮罩：轻度压暗实时演武画布，给左侧菜单 / 顶部 HUD / 底部预设库让出可读性。
+   场景保持引擎原始渲染，这里只做很轻的电影式调光（叠在 #111 场景上），非 UI 主题色 */
+.lobby-stage-veil {
+  background:
+    linear-gradient(90deg, rgb(0 0 0 / 55%), rgb(0 0 0 / 18%) 32%, rgb(0 0 0 / 0) 55%),
+    linear-gradient(0deg, rgb(0 0 0 / 60%), rgb(0 0 0 / 0) 26%),
+    linear-gradient(180deg, rgb(0 0 0 / 40%), rgb(0 0 0 / 0) 14%),
+    radial-gradient(130% 105% at 66% 42%, rgb(0 0 0 / 0) 55%, rgb(0 0 0 / 30%) 100%);
+}
+
+/* 大厅右上角战绩菱章（对应主菜单存档徽章）：旋转 45° 的双层描边方章 */
+.lobby-diamond {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  transform: rotate(45deg);
+  background: rgb(0 0 0 / 55%);
+  box-shadow:
+    inset 0 0 0 1px rgb(126 178 103 / 55%),
+    inset 0 0 0 4px #111,
+    inset 0 0 0 5px rgb(126 178 103 / 30%);
+}
+
+.lobby-diamond > span {
+  transform: rotate(-45deg);
+}
+
+/* FormSwitch 未选中态：默认轨道 bg-ambient 在暗色底上几乎不可见，只剩一颗白点。
+   沿设计系统 #999 中性轴提高轨道不透明度并补一圈内描边，让「关」也读得出是开关 */
+[role="switch"][data-state="unchecked"] {
+  background-color: rgb(153 153 153 / 0.32);
+  box-shadow: inset 0 0 0 1px rgb(153 153 153 / 0.3);
+}
+
+/* KO / 胜负横幅的过渡（Vue Transition name="banner"） */
+.banner-enter-active,
+.banner-leave-active {
+  transition: all 0.25s ease;
+}
+
+.banner-enter-from,
+.banner-leave-to {
+  opacity: 0;
+  transform: scale(1.4);
+}
+
+/* 对战菜单弹层的过渡（Vue Transition name="battle-menu"）：幕布淡入淡出 */
+.battle-menu-enter-active,
+.battle-menu-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.battle-menu-enter-from,
+.battle-menu-leave-to {
+  opacity: 0;
+}
+
+/* 场景切换（Vue Transition name="scene"）：只 crossfade 世界之上的交互层，
+   常驻舞台不参与。离场快、进场稍慢并带轻微纵向漂移 —— 场景是「切」过去的，
+   不是页面跳转；新旧层短暂同屏叠在同一个世界上 */
+.scene-enter-active {
+  transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+}
+
+.scene-leave-active {
+  transition: opacity 0.15s ease-in, transform 0.15s ease-in;
+  /* 离场层立即让出指针：世界输入不再被旧场景截留 */
+  pointer-events: none;
+}
+
+.scene-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.scene-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-enter-active,
+  .scene-leave-active {
+    transition: opacity 0.12s ease;
+  }
+
+  .scene-enter-from,
+  .scene-leave-to {
+    transform: none;
+  }
+
+  /* 工作区折叠直接切换，不做宽度/箭头动画 */
+  #editor-panel,
+  .panel-toggle-caret {
+    transition: none !important;
+  }
+}
+

@@ -1,0 +1,54 @@
+minimumReleaseAgeExcludePrune: true
+minimumReleaseAgeExclude:
+  - '@vitejs/plugin-vue@6.0.10'
+  - '@vue/language-core@3.3.13'
+  - vue-tsc@3.3.13
+
+trustPolicy: no-downgrade
+
+# @vercel/detect-agent 经 npmmirror 镜像获取时缺失 provenance 元数据，
+# 被信任策略误判为「trust downgrade」；1.2.6 为官方 registry 的最新版本。
+trustPolicyExclude:
+  - '@vercel/detect-agent'
+
+shellEmulator: true
+
+allowBuilds:
+  esbuild: true
+
+catalog:
+  '@iconify-json/ph': ^1.2.2
+  colorjs.io: ^0.7.1
+  reka-ui: ^2.11.0
+
+catalogs:
+  # 开发工具（构建 / lint / 类型检查）
+  dev:
+    '@antfu/eslint-config': ^9.5.1
+    '@unocss/eslint-plugin': ^66.10.5
+    '@unocss/reset': ^66.10.5
+    '@unocss/transformer-directives': ^66.10.5
+    '@vitejs/plugin-vue': ^6.0.10
+    eslint: ^10.12.0
+    eslint-plugin-slop: ^0.1.3
+    eslint-plugin-sonarjs: ^4.2.2
+    skills-npm: ^4.0.0
+    typescript: ^5.8.0
+    unocss: ^66.10.5
+    vite: ^7.1.0
+    vue-tsc: ^3.3.13
+  # 前端 UI 层
+  frontend:
+    '@vueuse/core': ^15.0.0
+    monaco-editor: ^0.57.0
+    vue: ^3.5.43
+    # @antfu/design 的 peer 依赖（tooltip 指令）
+    vue-afloat: ^0.2.0
+    vue-router: ^4.5.0
+  # 游戏引擎（渲染 / 物理 / 设计系统）
+  prod:
+    '@antfu/design': ^0.6.0
+    '@antfu/skills': ^0.1.0
+    '@dimforge/rapier2d-compat': ^0.21.0
+    pixi-dragonbones: 5.7.0-1
+    pixi.js: 7.4.3

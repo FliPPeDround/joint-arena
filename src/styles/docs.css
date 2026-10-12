@@ -1,0 +1,53 @@
+/* 应用内文档排版（SDK 文档 / 纹理 / 设置页共用 .docs 容器） */
+.docs {
+  --uno: 'px-4 py-3 text-compact leading-relaxed';
+}
+
+.docs h2 {
+  --uno: 'text-lg font-bold mt-1.5 mb-2.5';
+}
+
+.docs h3 {
+  --uno: 'text-sm font-bold mt-4 mb-1.5 color-active';
+}
+
+.docs p {
+  --uno: 'my-1.5';
+}
+
+.docs ul {
+  --uno: 'pl-5 my-1.5 list-disc';
+}
+
+.docs table {
+  --uno: 'w-full border-collapse my-2 text-mini';
+}
+
+.docs th,
+.docs td {
+  --uno: 'border border-base px-2 py-1 text-left align-top';
+}
+
+.docs th {
+  --uno: 'bg-secondary';
+}
+
+.docs pre {
+  --uno: 'bg-code border border-base rounded-md p-2.5 my-2 overflow-x-auto text-mini font-mono leading-relaxed';
+}
+
+.docs code {
+  --uno: 'font-mono bg-code px-1 py-0.5 rounded text-mini';
+}
+
+.docs pre code {
+  --uno: 'bg-transparent px-0 py-0';
+}
+
+.docs kbd {
+  --uno: 'bg-sunken border border-base border-b-2 rounded px-1.5 py-0.5 font-mono text-micro';
+}
+
+.docs label {
+  --uno: 'block py-0.75 cursor-pointer';
+}

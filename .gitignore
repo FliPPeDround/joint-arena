@@ -1,0 +1,40 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+*.local
+
+# 日志与缓存
+*.log
+.eslintcache
+.vite/
+
+# 系统 / 编辑器
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# —— Agent skills（dev 工具链，与游戏无关）——
+# 这些目录由 `pnpm install` 的 prepare 脚本（skills-npm）自动重建，
+# 内容来自第三方仓库（anthropics/skills、mattpocock/skills 等），不随仓库分发。
+# 版本由 skills-lock.json / skills-npm-lock.json 锁定。
+.agents/
+skills/
+.claude/
+.codebuddy/
+.continue/
+.crush/
+.goose/
+.grok/
+.junie/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.pochi/
+.qoder/
+.trae/
+.zcode/
+.zencoder/
